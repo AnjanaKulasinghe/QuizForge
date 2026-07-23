@@ -1,0 +1,91 @@
+/* print.css — clean layout for Print / Save as PDF of the results report */
+
+@page {
+    margin: 16mm;
+}
+
+.no-print {
+    display: none !important;
+}
+
+body {
+    background: #fff;
+    color: #000;
+}
+
+#app {
+    max-width: none;
+    padding: 0;
+}
+
+/* Only the results view should print. */
+#view-welcome,
+#view-exam {
+    display: none !important;
+}
+
+.result-header {
+    border: 1px solid #999;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.result-header.pass {
+    background: #eaf6ee !important;
+    color: #14562a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.result-header.fail {
+    background: #fbeae8 !important;
+    color: #7a1a13 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.result-score {
+    font-size: 28px;
+}
+
+.result-percent {
+    font-size: 18px;
+}
+
+.result-verdict {
+    font-size: 20px;
+}
+
+.report {
+    gap: 8px;
+}
+
+.report-item {
+    border: 1px solid #ccc;
+    border-left: 4px solid #999;
+    padding: 12px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.report-item.correct {
+    border-left-color: #14562a;
+}
+
+.report-item.incorrect {
+    border-left-color: #7a1a13;
+}
+
+.source a {
+    color: #000;
+    text-decoration: underline;
+}
+
+/* Print a heading before the report. */
+#report::before {
+    content: "QuizForge — Exam Report";
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 8px 0 12px;
+}
