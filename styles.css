@@ -300,6 +300,139 @@ body {
     letter-spacing: 0.08em;
 }
 
+/* ---------- exam select ---------- */
+.select-head {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 26px;
+}
+
+.select-head h2 {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 6px 0 6px;
+}
+
+.exam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+.exam-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 26px 26px 22px;
+    transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.exam-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 62%, var(--accent) 100%);
+}
+
+.exam-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: #cbd5e1;
+}
+
+.exam-card:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.exam-card-body {
+    flex: 1;
+}
+
+.exam-card-title {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 4px 0 2px;
+    color: var(--primary-dark);
+}
+
+.exam-card-subtitle {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.exam-card-desc {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14.5px;
+}
+
+.exam-card-facts {
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    padding: 0;
+    margin: 20px 0 16px;
+}
+
+.exam-card-facts li {
+    flex: 1;
+    text-align: center;
+    background: var(--grad-soft);
+    border: 1px solid #dde7f2;
+    border-radius: var(--radius-sm);
+    padding: 12px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+}
+
+.exam-card-facts b {
+    display: block;
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--primary);
+    margin-bottom: 4px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.exam-card-cta {
+    align-self: flex-start;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary);
+}
+
+.btn-back-link {
+    margin-bottom: 18px;
+    padding: 7px 14px;
+    font-size: 13.5px;
+}
+
 .instructions {
     margin: 22px 0;
     padding: 20px 22px;
@@ -808,6 +941,73 @@ body {
 
 .source a:hover {
     text-decoration: underline;
+}
+
+/* ---------- per-option answer review ---------- */
+.option-review {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.opt-review {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fbfcfe;
+}
+
+.opt-review.opt-correct {
+    border-color: var(--pass-line);
+    border-left-color: var(--pass-ink);
+    background: var(--pass-bg);
+}
+
+.opt-review.opt-chosen-wrong {
+    border-color: var(--fail-line);
+    border-left-color: var(--fail-ink);
+    background: var(--fail-bg);
+}
+
+.opt-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.opt-text {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14.5px;
+}
+
+.opt-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.badge-correct {
+    background: var(--pass-ink);
+    color: #fff;
+}
+
+.badge-chosen {
+    background: var(--fail-ink);
+    color: #fff;
+}
+
+.opt-why {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
 }
 
 /* ---------- responsive ---------- */

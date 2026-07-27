@@ -29,24 +29,64 @@ function pickSplit(total, min, max, availA, availB) {
     return [a, total - a];
 }
 
+/**
+ * Decide how many questions to draw from each pool so they sum to `total`
+ * (capped by availability). Two-bank exams that define min/max per document
+ * keep the original random split; any other shape gets an even, round-robin
+ * distribution across the available pools.
+ */
+function allocateCounts(total, pools, min, max) {
+    if (pools.length === 2 && Number.isFinite(min) && Number.isFinite(max)) {
+        return pickSplit(total, min, max, pools[0].length, pools[1].length);
+    }
+
+    const counts = new Array(pools.length).fill(0);
+    let remaining = total;
+    let progressed = true;
+    while (remaining > 0 && progressed) {
+        progressed = false;
+        for (let i = 0; i < pools.length && remaining > 0; i++) {
+            if (counts[i] < pools[i].length) {
+                counts[i]++;
+                remaining--;
+                progressed = true;
+            }
+        }
+    }
+    return counts;
+}
+
 /** Build a fresh exam from loaded banks. Returns a persistable state object. */
 function buildExam(banks) {
-    const ids = CONFIG.BANKS.map((b) => b.id);
-    const poolA = banks[ids[0]] || [];
-    const poolB = banks[ids[1]] || [];
-
-    const [nA, nB] = pickSplit(
+    const pools = CONFIG.BANKS.map((b) => banks[b.id] || []);
+    const counts = allocateCounts(
         CONFIG.TOTAL_QUESTIONS,
+        pools,
         CONFIG.MIN_PER_DOC,
-        CONFIG.MAX_PER_DOC,
-        poolA.length,
-        poolB.length
+        CONFIG.MAX_PER_DOC
     );
 
-    const chosen = shuffle([...sample(poolA, nA), ...sample(poolB, nB)]);
+    const picked = [];
+    pools.forEach((pool, i) => {
+        picked.push(...sample(pool, counts[i]));
+    });
+    const chosen = shuffle(picked);
 
     const questions = chosen.map((q) => {
         const correctText = q.options[q.correctAnswer];
+        const options = q.shuffleOptions === false ? q.options.slice() : shuffle(q.options);
+
+        // Convert per-option explanations (keyed by original option index) into a
+        // text-keyed map so the mapping survives option shuffling.
+        let optionExplanations = null;
+        if (q.answerExplanation && typeof q.answerExplanation === "object") {
+            optionExplanations = {};
+            q.options.forEach((opt, idx) => {
+                const ex = q.answerExplanation[idx] ?? q.answerExplanation[String(idx)];
+                if (ex) optionExplanations[opt] = ex;
+            });
+        }
+
         return {
             id: q.id,
             documentId: q.documentId,
@@ -54,14 +94,19 @@ function buildExam(banks) {
             section: q.section,
             subsection: q.subsection,
             page: q.page,
+            domain: q.domain || "",
+            objective: q.objective || "",
+            references: Array.isArray(q.references) ? q.references : [],
             question: q.question,
-            options: shuffle(q.options),
+            options,
             correctText,
-            explanation: q.explanation || ""
+            explanation: q.explanation || "",
+            optionExplanations
         };
     });
 
     return {
+        examId: CONFIG.EXAM_ID,
         questions,
         answers: new Array(questions.length).fill(null),
         currentIndex: 0,

@@ -3,32 +3,106 @@
 const App = {
     banks: null,
 
-    async init() {
+    init() {
         this.wireEvents();
-        this.updateFacts();
-        this.showView("welcome");
+        this.renderExamCards();
+        this.showView("select");
+        this.refreshSelectResume();
+    },
 
+    /* --- exam selection --- */
+    renderExamCards() {
+        const grid = document.getElementById("exam-grid");
+        grid.innerHTML = "";
+
+        EXAMS.forEach((exam) => {
+            const pct = passPercentFor(exam);
+
+            const card = document.createElement("button");
+            card.type = "button";
+            card.className = "exam-card";
+            card.setAttribute("aria-label", `Start ${exam.title}`);
+            card.innerHTML =
+                `<div class="exam-card-body">` +
+                `<h3 class="exam-card-title">${escapeHtml(exam.title)}</h3>` +
+                (exam.subtitle
+                    ? `<p class="exam-card-subtitle">${escapeHtml(exam.subtitle)}</p>`
+                    : "") +
+                (exam.description
+                    ? `<p class="exam-card-desc">${escapeHtml(exam.description)}</p>`
+                    : "") +
+                `</div>` +
+                `<ul class="exam-card-facts">` +
+                `<li><b>${exam.totalQuestions}</b> Questions</li>` +
+                `<li><b>${exam.durationMinutes}</b> Minutes</li>` +
+                `<li><b>${pct}%</b> To Pass</li>` +
+                `</ul>` +
+                `<span class="exam-card-cta">Select &rarr;</span>`;
+            card.addEventListener("click", () => this.selectExam(exam.id));
+            grid.appendChild(card);
+        });
+    },
+
+    /** Show the resume banner on the select screen if a saved exam still exists. */
+    refreshSelectResume() {
+        const banner = document.getElementById("resume-banner-select");
+        const saved = Storage.load();
+        if (saved && !saved.finished && Date.now() < saved.endTime && getExam(saved.examId)) {
+            document.getElementById("resume-title-select").textContent =
+                getExam(saved.examId).title;
+            banner.hidden = false;
+        } else {
+            if (saved && (saved.finished || Date.now() >= saved.endTime)) Storage.clear();
+            banner.hidden = true;
+        }
+    },
+
+    /** Enter the welcome screen for the chosen exam and load its banks. */
+    async selectExam(examId) {
         try {
-            this.banks = await loadBanks();
+            setActiveExam(examId);
         } catch (err) {
-            this.showWelcomeError(err.message);
-            document.getElementById("btn-start").disabled = true;
+            this.showSelectError(err.message);
             return;
         }
 
-        // Offer to resume an in-progress exam.
+        this.updateFacts();
+        this.showView("welcome");
+
+        const startBtn = document.getElementById("btn-start");
+        startBtn.disabled = true;
+        try {
+            this.banks = await loadBanks();
+            startBtn.disabled = false;
+        } catch (err) {
+            this.showWelcomeError(err.message);
+            return;
+        }
+
+        // Reflect the number of questions that will actually be drawn (the bank
+        // may hold fewer than the exam's target count).
+        const available = Object.values(this.banks).reduce((n, arr) => n + arr.length, 0);
+        document.getElementById("fact-count").textContent =
+            Math.min(CONFIG.TOTAL_QUESTIONS, available);
+
+        // Offer to resume an in-progress exam that belongs to this exam.
         const saved = Storage.load();
-        if (saved && !saved.finished && Date.now() < saved.endTime) {
-            document.getElementById("resume-banner").hidden = false;
-        } else if (saved) {
-            Storage.clear();
+        const banner = document.getElementById("resume-banner");
+        if (saved && !saved.finished && saved.examId === examId && Date.now() < saved.endTime) {
+            banner.hidden = false;
+        } else {
+            banner.hidden = true;
         }
     },
 
     updateFacts() {
+        document.getElementById("welcome-title").textContent = CONFIG.EXAM_TITLE;
+        if (ACTIVE_EXAM && ACTIVE_EXAM.description) {
+            document.getElementById("welcome-desc").textContent = ACTIVE_EXAM.description;
+        }
         document.getElementById("fact-count").textContent = CONFIG.TOTAL_QUESTIONS;
         document.getElementById("fact-minutes").textContent = CONFIG.DURATION_MINUTES;
-        const pct = Math.round((CONFIG.PASS_MARK / CONFIG.TOTAL_QUESTIONS) * 100);
+        const pct = passPercentFor(ACTIVE_EXAM);
         document.getElementById("fact-pass").textContent = `${pct}%`;
         document.getElementById("q-total").textContent = CONFIG.TOTAL_QUESTIONS;
     },
@@ -39,11 +113,25 @@ const App = {
         el.hidden = false;
     },
 
+    showSelectError(msg) {
+        const el = document.getElementById("select-error");
+        el.textContent = msg;
+        el.hidden = false;
+    },
+
     showView(name) {
-        ["welcome", "exam", "results"].forEach((v) => {
+        ["select", "welcome", "exam", "results"].forEach((v) => {
             document.getElementById(`view-${v}`).hidden = v !== name;
         });
         window.scrollTo(0, 0);
+    },
+
+    /** Return to the exam catalogue. */
+    backToSelect() {
+        document.getElementById("welcome-error").hidden = true;
+        document.getElementById("select-error").hidden = true;
+        this.refreshSelectResume();
+        this.showView("select");
     },
 
     /* --- exam lifecycle --- */
@@ -59,6 +147,25 @@ const App = {
         if (!state || state.finished || Date.now() >= state.endTime) {
             Storage.clear();
             document.getElementById("resume-banner").hidden = true;
+            return;
+        }
+        this.enterExam(state);
+    },
+
+    /** Resume directly from the select screen (loads the saved exam's banks). */
+    async resumeFromSelect() {
+        const state = Storage.load();
+        if (!state || state.finished || Date.now() >= state.endTime || !getExam(state.examId)) {
+            Storage.clear();
+            this.refreshSelectResume();
+            return;
+        }
+        try {
+            setActiveExam(state.examId);
+            this.updateFacts();
+            this.banks = await loadBanks();
+        } catch (err) {
+            this.showSelectError(err.message);
             return;
         }
         this.enterExam(state);
@@ -98,6 +205,13 @@ const App = {
 
     /* --- events --- */
     wireEvents() {
+        document.getElementById("btn-back-to-select").addEventListener("click", () => this.backToSelect());
+        document.getElementById("btn-resume-select").addEventListener("click", () => this.resumeFromSelect());
+        document.getElementById("btn-discard-select").addEventListener("click", () => {
+            Storage.clear();
+            this.refreshSelectResume();
+        });
+
         document.getElementById("btn-start").addEventListener("click", () => this.startNewExam());
         document.getElementById("btn-resume").addEventListener("click", () => this.resumeExam());
         document.getElementById("btn-discard").addEventListener("click", () => {

@@ -28,11 +28,32 @@
     </header>
 
     <main id="app">
+        <!-- ================= EXAM SELECT ================= -->
+        <section id="view-select" class="view" hidden>
+            <div class="select-head">
+                <h2>Choose an exam</h2>
+                <p class="lead">Select an exam to begin. Each one has its own rules, timing and question set.</p>
+            </div>
+
+            <div id="resume-banner-select" class="resume-banner" hidden>
+                <p>You have an exam in progress: <strong id="resume-title-select"></strong>.</p>
+                <div class="resume-actions">
+                    <button id="btn-resume-select" class="btn btn-primary">Resume Exam</button>
+                    <button id="btn-discard-select" class="btn btn-ghost">Discard</button>
+                </div>
+            </div>
+
+            <div id="exam-grid" class="exam-grid"></div>
+            <p id="select-error" class="error-text" hidden></p>
+        </section>
+
         <!-- ================= WELCOME ================= -->
         <section id="view-welcome" class="view" hidden>
             <div class="card">
-                <h2>Practice Exam</h2>
-                <p class="lead">Test your knowledge across both reference documents.</p>
+                <button id="btn-back-to-select" class="btn btn-ghost btn-back-link" type="button">&larr; Choose a
+                    different exam</button>
+                <h2 id="welcome-title">Practice Exam</h2>
+                <p class="lead" id="welcome-desc">Test your knowledge across both reference documents.</p>
 
                 <ul class="facts">
                     <li><span class="fact-num" id="fact-count">30</span><span class="fact-label">Questions</span></li>

@@ -18,6 +18,11 @@ const Grading = {
                 section: q.section,
                 subsection: q.subsection,
                 page: q.page,
+                domain: q.domain,
+                objective: q.objective,
+                references: q.references,
+                options: q.options,
+                optionExplanations: q.optionExplanations,
                 explanation: q.explanation
             };
         });
@@ -25,7 +30,9 @@ const Grading = {
         const score = details.filter((d) => d.correct).length;
         const total = details.length;
         const percent = total ? Math.round((score / total) * 100) : 0;
-        const passed = score >= CONFIG.PASS_MARK;
+        const passed = CONFIG.PASS_PERCENT != null
+            ? (total > 0 && (score / total) * 100 >= CONFIG.PASS_PERCENT)
+            : score >= CONFIG.PASS_MARK;
 
         return { score, total, percent, passed, details };
     },
@@ -63,16 +70,48 @@ const Grading = {
                 ? `<p class="explanation">${escapeHtml(d.explanation)}</p>`
                 : "";
 
-            // Source link is required for incorrectly answered questions,
-            // formatted as: Document name > Section name > Subsection name.
+            // Per-option explanation breakdown (Security+-style questions).
+            let optionReview = "";
+            if (d.optionExplanations && Array.isArray(d.options)) {
+                const rows = d.options.map((opt) => {
+                    const isCorrect = opt === d.correctText;
+                    const isChosenWrong = d.answered && opt === d.given && !isCorrect;
+                    let cls = "opt-review";
+                    if (isCorrect) cls += " opt-correct";
+                    else if (isChosenWrong) cls += " opt-chosen-wrong";
+
+                    let badge = "";
+                    if (isCorrect) badge = `<span class="opt-badge badge-correct">Correct</span>`;
+                    else if (isChosenWrong) badge = `<span class="opt-badge badge-chosen">Your answer</span>`;
+
+                    const why = d.optionExplanations[opt]
+                        ? `<p class="opt-why">${escapeHtml(d.optionExplanations[opt])}</p>`
+                        : "";
+
+                    return `<li class="${cls}"><div class="opt-head">` +
+                        `<span class="opt-text">${escapeHtml(opt)}</span>${badge}` +
+                        `</div>${why}</li>`;
+                }).join("");
+                optionReview = `<ul class="option-review">${rows}</ul>`;
+            }
+
+            // Source link is shown for incorrectly answered questions. Prefer a
+            // PDF page link, then explicit references, then a text breadcrumb.
             let sourceBlock = "";
             if (!d.correct) {
-                const source = `${d.documentTitle} > ${d.section} > ${d.subsection}`;
                 const pdf = pdfForDocument(d.documentId);
-                const sourceLink = pdf
-                    ? `<a href="${pdf}#page=${d.page}" target="_blank" rel="noopener">${escapeHtml(source)}</a>`
-                    : escapeHtml(source);
-                sourceBlock = `<p class="source"><span class="ans-label">Source:</span> ${sourceLink}</p>`;
+                if (pdf) {
+                    const source = `${d.documentTitle} > ${d.section} > ${d.subsection}`;
+                    const sourceLink =
+                        `<a href="${pdf}#page=${d.page}" target="_blank" rel="noopener">${escapeHtml(source)}</a>`;
+                    sourceBlock = `<p class="source"><span class="ans-label">Source:</span> ${sourceLink}</p>`;
+                } else if (Array.isArray(d.references) && d.references.length) {
+                    const refs = d.references.map(escapeHtml).join(", ");
+                    sourceBlock = `<p class="source"><span class="ans-label">Reference:</span> ${refs}</p>`;
+                } else if (d.documentTitle) {
+                    const source = `${d.documentTitle} > ${d.section} > ${d.subsection}`;
+                    sourceBlock = `<p class="source"><span class="ans-label">Source:</span> ${escapeHtml(source)}</p>`;
+                }
             }
 
             item.innerHTML =
@@ -85,6 +124,7 @@ const Grading = {
                 `<span class="ans-given">${yourAnswer}</span></p>` +
                 correctBlock +
                 explanation +
+                optionReview +
                 sourceBlock;
 
             report.appendChild(item);
