@@ -833,6 +833,139 @@ body {
     flex-wrap: wrap;
 }
 
+.result-summary {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 26px;
+    box-shadow: var(--shadow-sm);
+}
+
+.summary-title {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+    color: var(--ink);
+}
+
+.summary-lede {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 16px;
+}
+
+.summary-table-wrap {
+    overflow-x: auto;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.summary-table thead th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--line);
+    white-space: nowrap;
+}
+
+.summary-table tbody td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+}
+
+.summary-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.summary-domain {
+    font-weight: 600;
+    color: var(--ink);
+    min-width: 180px;
+}
+
+.summary-num {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+    white-space: nowrap;
+}
+
+.summary-ok {
+    color: var(--pass-ink);
+    font-weight: 700;
+}
+
+.summary-bad {
+    color: var(--fail-ink);
+    font-weight: 700;
+}
+
+.summary-acc {
+    min-width: 190px;
+}
+
+.summary-bar {
+    position: relative;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--fail-bg);
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.summary-bar-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--pass-ink);
+}
+
+.summary-acc-val {
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.summary-table tr.summary-weak {
+    background: var(--fail-bg);
+}
+
+.summary-flag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fail-ink);
+    background: rgba(185, 28, 28, 0.1);
+    border-radius: 999px;
+    padding: 2px 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.summary-advice {
+    margin: 16px 0 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--line-soft);
+    color: var(--ink-soft);
+    font-size: 14px;
+}
+
 .report {
     display: flex;
     flex-direction: column;

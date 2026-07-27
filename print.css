@@ -56,6 +56,48 @@ body {
     font-size: 20px;
 }
 
+.result-summary {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.summary-title {
+    font-size: 15px;
+    margin: 0 0 4px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: left;
+}
+
+.summary-bar {
+    display: none;
+}
+
+.summary-table tr.summary-weak {
+    background: #fbeae8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.summary-flag {
+    color: #7a1a13;
+    font-size: 9px;
+}
+
 .report {
     gap: 8px;
 }

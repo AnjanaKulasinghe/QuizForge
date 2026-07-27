@@ -49,6 +49,8 @@ const Grading = {
         document.getElementById("result-verdict").textContent =
             result.passed ? "PASS" : "FAIL";
 
+        this.renderSummary(result);
+
         const report = document.getElementById("report");
         report.innerHTML = "";
 
@@ -129,6 +131,74 @@ const Grading = {
 
             report.appendChild(item);
         });
+    },
+
+    /** Build a per-domain performance breakdown so users can spot weak areas. */
+    renderSummary(result) {
+        const container = document.getElementById("result-summary");
+        if (!container) return;
+
+        const groups = new Map();
+        result.details.forEach((d) => {
+            const key = d.domain || "Uncategorized";
+            let g = groups.get(key);
+            if (!g) {
+                g = { domain: key, total: 0, correct: 0, incorrect: 0, unanswered: 0 };
+                groups.set(key, g);
+            }
+            g.total += 1;
+            if (d.correct) g.correct += 1;
+            else if (d.answered) g.incorrect += 1;
+            else g.unanswered += 1;
+        });
+
+        const total = result.total || 1;
+        const rows = [...groups.values()]
+            .sort((a, b) => (a.correct / a.total) - (b.correct / b.total));
+
+        // Highlight the weakest area (lowest accuracy with at least one question).
+        const weakest = rows.length ? rows[0] : null;
+
+        const bodyRows = rows.map((g) => {
+            const share = Math.round((g.total / total) * 100);
+            const acc = Math.round((g.correct / g.total) * 100);
+            const wrong = 100 - acc;
+            const isWeak = weakest && g.domain === weakest.domain && acc < 100;
+            return `<tr class="${isWeak ? "summary-weak" : ""}">` +
+                `<td class="summary-domain">${escapeHtml(g.domain)}` +
+                `${isWeak ? ` <span class="summary-flag">Focus area</span>` : ""}</td>` +
+                `<td class="summary-num">${share}%</td>` +
+                `<td class="summary-num">${g.total}</td>` +
+                `<td class="summary-num summary-ok">${g.correct}</td>` +
+                `<td class="summary-num summary-bad">${g.incorrect}</td>` +
+                `<td class="summary-num">${g.unanswered}</td>` +
+                `<td class="summary-acc">` +
+                `<div class="summary-bar"><span class="summary-bar-fill" style="width:${acc}%"></span></div>` +
+                `<span class="summary-acc-val">${acc}% correct / ${wrong}% wrong</span>` +
+                `</td>` +
+                `</tr>`;
+        }).join("");
+
+        const advice = weakest && Math.round((weakest.correct / weakest.total) * 100) < 100
+            ? `<p class="summary-advice">You scored lowest in ` +
+            `<strong>${escapeHtml(weakest.domain)}</strong> ` +
+            `(${Math.round((weakest.correct / weakest.total) * 100)}% correct). ` +
+            `Focus your study there first.</p>`
+            : `<p class="summary-advice">Strong, balanced performance across all areas.</p>`;
+
+        container.innerHTML =
+            `<h2 class="summary-title">Exam Summary</h2>` +
+            `<p class="summary-lede">You answered <strong>${result.score}</strong> of ` +
+            `<strong>${result.total}</strong> questions correctly ` +
+            `(<strong>${result.percent}%</strong>). Breakdown by category:</p>` +
+            `<div class="summary-table-wrap"><table class="summary-table">` +
+            `<thead><tr>` +
+            `<th>Category</th><th>Share</th><th>Qs</th>` +
+            `<th>Correct</th><th>Wrong</th><th>Skipped</th><th>Accuracy</th>` +
+            `</tr></thead>` +
+            `<tbody>${bodyRows}</tbody>` +
+            `</table></div>` +
+            advice;
     }
 };
 
